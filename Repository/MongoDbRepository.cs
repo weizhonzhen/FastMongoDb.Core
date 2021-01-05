@@ -489,7 +489,7 @@ namespace FastMongoDb.Core.Repository
         {
             return await Task.Run(() =>
             {
-                return PageDataList<T>(pModel, predicate, field, sort, isDesc);
+                return PageList<T>(pModel, predicate, field, sort, isDesc);
             }).ConfigureAwait(false);
         }
 

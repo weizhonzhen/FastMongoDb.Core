@@ -45,9 +45,9 @@ namespace FastMongoDb.Core.Repository
             }
         }
 
-        public async Task<bool> AddAsy<T>(T model)
+        public Task<bool> AddAsy<T>(T model)
         {
-            return await Task.Run(() =>
+            return Task.Run(() =>
             {
                 try
                 {
@@ -62,7 +62,7 @@ namespace FastMongoDb.Core.Repository
                     }).ConfigureAwait(false);
                     return false;
                 }
-            }).ConfigureAwait(false);
+            });
         }
 
 
@@ -83,9 +83,9 @@ namespace FastMongoDb.Core.Repository
             }
         }
 
-        public async Task<bool> AddListAsy<T>(List<T> list)
+        public Task<bool> AddListAsy<T>(List<T> list)
         {
-            return await Task.Run(() =>
+            return Task.Run(() =>
             {
                 try
                 {
@@ -100,7 +100,7 @@ namespace FastMongoDb.Core.Repository
                     }).ConfigureAwait(false);
                     return false;
                 }
-            }).ConfigureAwait(false);
+            });
         }
 
 
@@ -120,9 +120,9 @@ namespace FastMongoDb.Core.Repository
             }
         }
 
-        public async Task<bool> DeleteAsy<T>(Expression<Func<T, bool>> predicate)
+        public Task<bool> DeleteAsy<T>(Expression<Func<T, bool>> predicate)
         {
-            return await Task.Factory.StartNew(() =>
+            return Task.Run(() =>
             {
                 try
                 {
@@ -136,7 +136,7 @@ namespace FastMongoDb.Core.Repository
                     }).ConfigureAwait(false);
                     return false;
                 }
-            }).ConfigureAwait(false);
+            });
         }
 
 
@@ -160,9 +160,9 @@ namespace FastMongoDb.Core.Repository
             }
         }
 
-        public async Task<bool> UpdateAsy<T>(Expression<Func<T, bool>> predicate, T item, Expression<Func<T, object>> field)
+        public Task<bool> UpdateAsy<T>(Expression<Func<T, bool>> predicate, T item, Expression<Func<T, object>> field)
         {
-            return await Task.Factory.StartNew(() =>
+            return Task.Run(() =>
             {
                 try
                 {
@@ -180,7 +180,7 @@ namespace FastMongoDb.Core.Repository
                     }).ConfigureAwait(false);
                     return false;
                 }
-            }).ConfigureAwait(false);
+            });
         }
 
 
@@ -200,9 +200,9 @@ namespace FastMongoDb.Core.Repository
             }
         }
 
-        public async Task<bool> ReplaceAsy<T>(Expression<Func<T, bool>> predicate, T item)
+        public Task<bool> ReplaceAsy<T>(Expression<Func<T, bool>> predicate, T item)
         {
-            return await Task.Factory.StartNew(() =>
+            return Task.Run(() =>
             {
                 try
                 {
@@ -216,7 +216,7 @@ namespace FastMongoDb.Core.Repository
                     }).ConfigureAwait(false);
                     return false;
                 }
-            }).ConfigureAwait(false);
+            });
         }
 
 
@@ -239,12 +239,12 @@ namespace FastMongoDb.Core.Repository
             }
         }
 
-        public async Task<T> GetModelAsy<T>(Expression<Func<T, bool>> predicate, Expression<Func<T, object>> field = null) where T : class, new()
+        public Task<T> GetModelAsy<T>(Expression<Func<T, bool>> predicate, Expression<Func<T, object>> field = null) where T : class, new()
         {
-            return await Task.Run(() =>
+            return Task.Run(() =>
             {
                 return GetModel<T>(predicate, field);
-            }).ConfigureAwait(false);
+            });
         }
 
 
@@ -277,12 +277,12 @@ namespace FastMongoDb.Core.Repository
             }
         }
 
-        public async Task<List<T>> GetListAsy<T>(Expression<Func<T, bool>> predicate, Expression<Func<T, object>> field = null, Expression<Func<T, object>> sort = null, bool isDesc = false)
+        public Task<List<T>> GetListAsy<T>(Expression<Func<T, bool>> predicate, Expression<Func<T, object>> field = null, Expression<Func<T, object>> sort = null, bool isDesc = false)
         {
-            return await Task.Run(() =>
+            return Task.Run(() =>
             {
                 return GetList<T>(predicate, field, sort, isDesc);
-            }).ConfigureAwait(false);
+            });
         }
 
 
@@ -302,23 +302,20 @@ namespace FastMongoDb.Core.Repository
             }
         }
 
-        public async Task<long> GetLCountAsy<T>(Expression<Func<T, bool>> predicate)
+        public Task<long> GetLCountAsy<T>(Expression<Func<T, bool>> predicate)
         {
-            return await Task.Run(() =>
+            try
             {
-                try
+                return GetClient<T>().CountAsync<T>(predicate);
+            }
+            catch (Exception ex)
+            {
+                Task.Run(() =>
                 {
-                    return GetClient<T>().CountAsync<T>(predicate).Result;
-                }
-                catch (Exception ex)
-                {
-                    Task.Run(() =>
-                    {
-                        SaveLog<T>(ex, "GetLCountAsy<T>");
-                    }).ConfigureAwait(false);
-                    return 0;
-                }
-            }).ConfigureAwait(false);
+                    SaveLog<T>(ex, "GetLCountAsy<T>");
+                }).ConfigureAwait(false);
+                return Task.FromResult((long)0);
+            }
         }
 
 
@@ -338,23 +335,20 @@ namespace FastMongoDb.Core.Repository
             }
         }
 
-        public async Task<T> FindDeleteAsy<T>(Expression<Func<T, bool>> predicate) where T : class, new()
+        public Task<T> FindDeleteAsy<T>(Expression<Func<T, bool>> predicate) where T : class, new()
         {
-            return await Task.Run(() =>
+            try
             {
-                try
+                return GetClient<T>().FindOneAndDeleteAsync<T>(predicate);
+            }
+            catch (Exception ex)
+            {
+                Task.Run(() =>
                 {
-                    return GetClient<T>().FindOneAndDeleteAsync<T>(predicate).Result;
-                }
-                catch (Exception ex)
-                {
-                    Task.Run(() =>
-                    {
-                        SaveLog<T>(ex, "FindDeleteAsy<T>");
-                    }).ConfigureAwait(false);
-                    return new T();
-                }
-            }).ConfigureAwait(false);
+                    SaveLog<T>(ex, "FindDeleteAsy<T>");
+                }).ConfigureAwait(false);
+                return Task.FromResult(new T());
+            }
         }
 
 
@@ -374,23 +368,20 @@ namespace FastMongoDb.Core.Repository
             }
         }
 
-        public async Task<T> FindReplaceAsy<T>(Expression<Func<T, bool>> predicate, T item) where T : class, new()
+        public Task<T> FindReplaceAsy<T>(Expression<Func<T, bool>> predicate, T item) where T : class, new()
         {
-            return await Task.Run(() =>
+            try
             {
-                try
+                return GetClient<T>().FindOneAndReplaceAsync<T>(predicate, item);
+            }
+            catch (Exception ex)
+            {
+                Task.Run(() =>
                 {
-                    return GetClient<T>().FindOneAndReplaceAsync<T>(predicate, item).Result;
-                }
-                catch (Exception ex)
-                {
-                    Task.Run(() =>
-                    {
-                        SaveLog<T>(ex, "FindReplaceAsy<T>");
-                    }).ConfigureAwait(false);
-                    return new T();
-                }
-            }).ConfigureAwait(false);
+                    SaveLog<T>(ex, "FindReplaceAsy<T>");
+                }).ConfigureAwait(false);
+                return Task.FromResult(new T());
+            }
         }
 
 
@@ -414,27 +405,24 @@ namespace FastMongoDb.Core.Repository
             }
         }
 
-        public async Task<T> FindUpdateAsy<T>(Expression<Func<T, bool>> predicate, T item, Expression<Func<T, object>> field) where T : class, new()
+        public Task<T> FindUpdateAsy<T>(Expression<Func<T, bool>> predicate, T item, Expression<Func<T, object>> field) where T : class, new()
         {
-            return await Task.Run(() =>
+            try
             {
-                try
+                var result = GetUpdateFiled<T>(item, field);
+                if (result == null)
+                    return Task.FromResult(new T());
+                else
+                    return GetClient<T>().FindOneAndUpdateAsync<T>(predicate, result);
+            }
+            catch (Exception ex)
+            {
+                Task.Run(() =>
                 {
-                    var result = GetUpdateFiled<T>(item, field);
-                    if (result == null)
-                        return new T();
-                    else
-                        return GetClient<T>().FindOneAndUpdateAsync<T>(predicate, result).Result;
-                }
-                catch (Exception ex)
-                {
-                    Task.Run(() =>
-                    {
-                        SaveLog<T>(ex, "FindUpdateAsy<T>");
-                    }).ConfigureAwait(false);
-                    return new T();
-                }
-            }).ConfigureAwait(false);
+                    SaveLog<T>(ex, "FindUpdateAsy<T>");
+                }).ConfigureAwait(false);
+                return Task.FromResult(new T());
+            }
         }
 
 
@@ -485,12 +473,12 @@ namespace FastMongoDb.Core.Repository
             }
         }
 
-        public async Task<PageResult<T>> PageListAsy<T>(PageModel pModel, Expression<Func<T, bool>> predicate, Expression<Func<T, object>> field = null, Expression<Func<T, object>> sort = null, bool isDesc = false) where T : class, new()
+        public Task<PageResult<T>> PageListAsy<T>(PageModel pModel, Expression<Func<T, bool>> predicate, Expression<Func<T, object>> field = null, Expression<Func<T, object>> sort = null, bool isDesc = false) where T : class, new()
         {
-            return await Task.Run(() =>
+            return Task.Run(() =>
             {
                 return PageList<T>(pModel, predicate, field, sort, isDesc);
-            }).ConfigureAwait(false);
+            });
         }
 
 

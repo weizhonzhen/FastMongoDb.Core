@@ -509,7 +509,7 @@ namespace FastMongoDb.Core.Repository
                 var list = (field.Body as NewExpression).Members;
                 foreach (var temp in list)
                 {
-                    var itemValue = dynGet.GetValue(item, temp.Name, true);
+                    var itemValue = dynGet.GetValue(item, temp.Name);
                     fieldList.Add(Builders<T>.Update.Set(temp.Name, itemValue));
                 }
 

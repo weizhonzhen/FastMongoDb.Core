@@ -16,14 +16,23 @@ namespace FastMongoDb.Core.Repository
 
         public MongoDbRepository(IOptions<ConfigModel> options)
         {
-            if (options == null)
+            try
             {
-                throw new Exception("services.AddFastMongoDb(a => { a.ConnStr = ''; a.DbName = ''; });");
+                if (options == null || options.Value.ConnStr == null)
+                {
+                    config = BaseConfig.GetValue<ConfigModel>(AppSettingKey.MongoDb, "db.json");
+                    client = new MongoClient(config.ConnStr);
+                }
+                else
+                {
+                    config = options.Value;
+                    client = new MongoClient(config.ConnStr);
+                }
             }
-            else
+            catch
             {
-                config = options.Value;
-                client = new MongoClient(config.ConnStr);
+                throw new Exception(@"services.AddFastMongoDb(a => { a.ConnStr = ''; a.DbName = ''; }); 
+                                    or ( services.AddFastMongoDb(); and db.json add MongoDb:{'ConnStr':'mongodb address','DbName':'dbname','Max'': 100,'Min': 10} )");
             }
         }
 

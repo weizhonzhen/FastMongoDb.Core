@@ -9,7 +9,8 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IServiceCollection AddFastMongoDb(this IServiceCollection serviceCollection, Action<ConfigModel> optionsAction = null)
         {
-            serviceCollection.Configure(optionsAction);
+            if (optionsAction != null)
+                serviceCollection.Configure(optionsAction);
             serviceCollection.AddSingleton<IMongoDbRepository, MongoDbRepository>();
             ServiceContext.Init(new ServiceEngine(serviceCollection.BuildServiceProvider()));
             return serviceCollection;

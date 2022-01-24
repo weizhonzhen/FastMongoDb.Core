@@ -512,13 +512,12 @@ namespace FastMongoDb.Core.Repository
             try
             {
                 var pInfo = PropertyCache.GetPropertyInfo<T>();
-                var dynGet = new DynamicGet<T>();
                 var fieldList = new List<UpdateDefinition<T>>();
 
                 var list = (field.Body as NewExpression).Members;
                 foreach (var temp in list)
                 {
-                    var itemValue = dynGet.GetValue(item, temp.Name);
+                    var itemValue = BaseEmit.Get(item, temp.Name);
                     fieldList.Add(Builders<T>.Update.Set(temp.Name, itemValue));
                 }
 

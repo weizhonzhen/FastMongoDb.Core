@@ -36,7 +36,7 @@ namespace FastMongoDb.Core.Repository
             }
         }
 
-       
+
         public bool Add<T>(T model)
         {
             try
@@ -46,32 +46,23 @@ namespace FastMongoDb.Core.Repository
             }
             catch (Exception ex)
             {
-                Task.Run(() =>
-                {
-                    SaveLog<T>(ex, "Add<T>");
-                }).ConfigureAwait(false);
+                SaveLog<T>(ex, "Add<T>");
                 return false;
             }
         }
 
-        public Task<bool> AddAsy<T>(T model)
+        public ValueTask<bool> AddAsy<T>(T model)
         {
-            return Task.Run(() =>
+            try
             {
-                try
-                {
-                    GetClient<T>().InsertOneAsync(model);
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    Task.Run(() =>
-                    {
-                        SaveLog<T>(ex, "AddAsy<T>");
-                    }).ConfigureAwait(false);
-                    return false;
-                }
-            });
+                GetClient<T>().InsertOneAsync(model);
+                return new ValueTask<bool>(true);
+            }
+            catch (Exception ex)
+            {
+                SaveLog<T>(ex, "AddAsy<T>");
+                return new ValueTask<bool>(false);
+            }
         }
 
 
@@ -84,36 +75,28 @@ namespace FastMongoDb.Core.Repository
             }
             catch (Exception ex)
             {
-                Task.Run(() =>
-                {
-                    SaveLog<T>(ex, "AddList<T>");
-                }).ConfigureAwait(false);
+                SaveLog<T>(ex, "AddList<T>");
                 return false;
             }
         }
 
-        public Task<bool> AddListAsy<T>(List<T> list)
+        public ValueTask<bool> AddListAsy<T>(List<T> list)
         {
-            return Task.Run(() =>
+            try
             {
-                try
-                {
-                    GetClient<T>().InsertManyAsync(list);
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    Task.Run(() =>
-                    {
-                        SaveLog<T>(ex, "AddListAsy<T>");
-                    }).ConfigureAwait(false);
-                    return false;
-                }
-            });
+                GetClient<T>().InsertManyAsync(list);
+                return new ValueTask<bool>(true);
+            }
+            catch (Exception ex)
+            {
+                SaveLog<T>(ex, "AddListAsy<T>");
+                return new ValueTask<bool>(false);
+            }
         }
 
 
         public bool Delete<T>(Expression<Func<T, bool>> predicate)
+
         {
             try
             {
@@ -121,31 +104,21 @@ namespace FastMongoDb.Core.Repository
             }
             catch (Exception ex)
             {
-                Task.Factory.StartNew(() =>
-                {
-                    SaveLog<T>(ex, "Delete<T>");
-                }).ConfigureAwait(false);
+                SaveLog<T>(ex, "Delete<T>");
                 return false;
             }
         }
-
-        public Task<bool> DeleteAsy<T>(Expression<Func<T, bool>> predicate)
+        public ValueTask<bool> DeleteAsy<T>(Expression<Func<T, bool>> predicate)
         {
-            return Task.Run(() =>
+            try
             {
-                try
-                {
-                    return GetClient<T>().DeleteManyAsync<T>(predicate).Result.DeletedCount > 0;
-                }
-                catch (Exception ex)
-                {
-                    Task.Run(() =>
-                    {
-                        SaveLog<T>(ex, "DeleteAsy<T>");
-                    }).ConfigureAwait(false);
-                    return false;
-                }
-            });
+                return new ValueTask<bool>(GetClient<T>().DeleteManyAsync<T>(predicate).Result.DeletedCount > 0);
+            }
+            catch (Exception ex)
+            {
+                SaveLog<T>(ex, "DeleteAsy<T>");
+                return new ValueTask<bool>(false);
+            }
         }
 
 
@@ -161,35 +134,26 @@ namespace FastMongoDb.Core.Repository
             }
             catch (Exception ex)
             {
-                Task.Run(() =>
-                {
-                    SaveLog<T>(ex, "Update<T>");
-                }).ConfigureAwait(false);
+                SaveLog<T>(ex, "Update<T>");
                 return false;
             }
         }
 
-        public Task<bool> UpdateAsy<T>(Expression<Func<T, bool>> predicate, T item, Expression<Func<T, object>> field)
+        public ValueTask<bool> UpdateAsy<T>(Expression<Func<T, bool>> predicate, T item, Expression<Func<T, object>> field)
         {
-            return Task.Run(() =>
+            try
             {
-                try
-                {
-                    var result = GetUpdateFiled<T>(item, field);
-                    if (result == null)
-                        return false;
-                    else
-                        return GetClient<T>().UpdateManyAsync<T>(predicate, result).Result.ModifiedCount > 0;
-                }
-                catch (Exception ex)
-                {
-                    Task.Run(() =>
-                    {
-                        SaveLog<T>(ex, "UpdateAsy<T>");
-                    }).ConfigureAwait(false);
-                    return false;
-                }
-            });
+                var result = GetUpdateFiled<T>(item, field);
+                if (result == null)
+                    return new ValueTask<bool>(false);
+                else
+                    return new ValueTask<bool>(GetClient<T>().UpdateManyAsync<T>(predicate, result).Result.ModifiedCount > 0);
+            }
+            catch (Exception ex)
+            {
+                SaveLog<T>(ex, "UpdateAsy<T>");
+                return new ValueTask<bool>(false);
+            }
         }
 
 
@@ -201,31 +165,22 @@ namespace FastMongoDb.Core.Repository
             }
             catch (Exception ex)
             {
-                Task.Run(() =>
-                {
-                    SaveLog<T>(ex, "Replace<T>");
-                }).ConfigureAwait(false);
+                SaveLog<T>(ex, "Replace<T>");
                 return false;
             }
         }
 
-        public Task<bool> ReplaceAsy<T>(Expression<Func<T, bool>> predicate, T item)
+        public ValueTask<bool> ReplaceAsy<T>(Expression<Func<T, bool>> predicate, T item)
         {
-            return Task.Run(() =>
+            try
             {
-                try
-                {
-                    return GetClient<T>().ReplaceOneAsync<T>(predicate, item).Result.ModifiedCount > 0;
-                }
-                catch (Exception ex)
-                {
-                    Task.Factory.StartNew(() =>
-                    {
-                        SaveLog<T>(ex, "ReplaceAsy<T>");
-                    }).ConfigureAwait(false);
-                    return false;
-                }
-            });
+                return new ValueTask<bool>(GetClient<T>().ReplaceOneAsync<T>(predicate, item).Result.ModifiedCount > 0);
+            }
+            catch (Exception ex)
+            {
+                SaveLog<T>(ex, "ReplaceAsy<T>");
+                return new ValueTask<bool>(false);
+            }
         }
 
 
@@ -240,20 +195,14 @@ namespace FastMongoDb.Core.Repository
             }
             catch (Exception ex)
             {
-                Task.Run(() =>
-                {
-                    SaveLog<T>(ex, "GetModel<T>");
-                }).ConfigureAwait(false);
+                SaveLog<T>(ex, "GetModel<T>");
                 return new T();
             }
         }
 
-        public Task<T> GetModelAsy<T>(Expression<Func<T, bool>> predicate, Expression<Func<T, object>> field = null) where T : class, new()
+        public ValueTask<T> GetModelAsy<T>(Expression<Func<T, bool>> predicate, Expression<Func<T, object>> field = null) where T : class, new()
         {
-            return Task.Run(() =>
-            {
-                return GetModel<T>(predicate, field);
-            });
+            return new ValueTask<T>(GetModel<T>(predicate, field));
         }
 
 
@@ -278,20 +227,14 @@ namespace FastMongoDb.Core.Repository
             }
             catch (Exception ex)
             {
-                Task.Run(() =>
-                {
-                    SaveLog<T>(ex, "GetList<T>");
-                }).ConfigureAwait(false);
+                SaveLog<T>(ex, "GetList<T>");
                 return new List<T>();
             }
         }
 
-        public Task<List<T>> GetListAsy<T>(Expression<Func<T, bool>> predicate, Expression<Func<T, object>> field = null, Expression<Func<T, object>> sort = null, bool isDesc = false)
+        public ValueTask<List<T>> GetListAsy<T>(Expression<Func<T, bool>> predicate, Expression<Func<T, object>> field = null, Expression<Func<T, object>> sort = null, bool isDesc = false)
         {
-            return Task.Run(() =>
-            {
-                return GetList<T>(predicate, field, sort, isDesc);
-            });
+            return new ValueTask<List<T>>(GetList<T>(predicate, field, sort, isDesc));
         }
 
 
@@ -303,27 +246,21 @@ namespace FastMongoDb.Core.Repository
             }
             catch (Exception ex)
             {
-                Task.Factory.StartNew(() =>
-                {
-                    SaveLog<T>(ex, "GetCount<T>");
-                });
-                return -99;
+                SaveLog<T>(ex, "GetCount<T>");
+                return 0;
             }
         }
 
-        public Task<long> GetLCountAsy<T>(Expression<Func<T, bool>> predicate)
+        public ValueTask<long> GetLCountAsy<T>(Expression<Func<T, bool>> predicate)
         {
             try
             {
-                return GetClient<T>().CountAsync<T>(predicate);
+                return new ValueTask<long>(GetClient<T>().Count<T>(predicate));
             }
             catch (Exception ex)
             {
-                Task.Run(() =>
-                {
-                    SaveLog<T>(ex, "GetLCountAsy<T>");
-                }).ConfigureAwait(false);
-                return Task.FromResult((long)0);
+                SaveLog<T>(ex, "GetLCountAsy<T>");
+                return new ValueTask<long>(0);
             }
         }
 
@@ -336,27 +273,21 @@ namespace FastMongoDb.Core.Repository
             }
             catch (Exception ex)
             {
-                Task.Run(() =>
-                {
-                    SaveLog<T>(ex, "FindDelete<T>");
-                }).ConfigureAwait(false);
+                SaveLog<T>(ex, "FindDelete<T>");
                 return new T();
             }
         }
 
-        public Task<T> FindDeleteAsy<T>(Expression<Func<T, bool>> predicate) where T : class, new()
+        public ValueTask<T> FindDeleteAsy<T>(Expression<Func<T, bool>> predicate) where T : class, new()
         {
             try
             {
-                return GetClient<T>().FindOneAndDeleteAsync<T>(predicate);
+                return new ValueTask<T>(GetClient<T>().FindOneAndDeleteAsync<T>(predicate));
             }
             catch (Exception ex)
             {
-                Task.Run(() =>
-                {
-                    SaveLog<T>(ex, "FindDeleteAsy<T>");
-                }).ConfigureAwait(false);
-                return Task.FromResult(new T());
+                SaveLog<T>(ex, "FindDeleteAsy<T>");
+                return new ValueTask<T>(new T());
             }
         }
 
@@ -377,19 +308,16 @@ namespace FastMongoDb.Core.Repository
             }
         }
 
-        public Task<T> FindReplaceAsy<T>(Expression<Func<T, bool>> predicate, T item) where T : class, new()
+        public ValueTask<T> FindReplaceAsy<T>(Expression<Func<T, bool>> predicate, T item) where T : class, new()
         {
             try
             {
-                return GetClient<T>().FindOneAndReplaceAsync<T>(predicate, item);
+                return new ValueTask<T>(GetClient<T>().FindOneAndReplace<T>(predicate, item));
             }
             catch (Exception ex)
             {
-                Task.Run(() =>
-                {
-                    SaveLog<T>(ex, "FindReplaceAsy<T>");
-                }).ConfigureAwait(false);
-                return Task.FromResult(new T());
+                SaveLog<T>(ex, "FindReplaceAsy<T>");
+                return new ValueTask<T>(new T());
             }
         }
 
@@ -406,31 +334,25 @@ namespace FastMongoDb.Core.Repository
             }
             catch (Exception ex)
             {
-                Task.Run(() =>
-                {
-                    SaveLog<T>(ex, "FindUpdate<T>");
-                }).ConfigureAwait(false);
+                SaveLog<T>(ex, "FindUpdate<T>");
                 return new T();
             }
         }
 
-        public Task<T> FindUpdateAsy<T>(Expression<Func<T, bool>> predicate, T item, Expression<Func<T, object>> field) where T : class, new()
+        public ValueTask<T> FindUpdateAsy<T>(Expression<Func<T, bool>> predicate, T item, Expression<Func<T, object>> field) where T : class, new()
         {
             try
             {
                 var result = GetUpdateFiled<T>(item, field);
                 if (result == null)
-                    return Task.FromResult(new T());
+                    return new ValueTask<T>(new T());
                 else
-                    return GetClient<T>().FindOneAndUpdateAsync<T>(predicate, result);
+                    return new ValueTask<T>(GetClient<T>().FindOneAndUpdate<T>(predicate, result));
             }
             catch (Exception ex)
             {
-                Task.Run(() =>
-                {
-                    SaveLog<T>(ex, "FindUpdateAsy<T>");
-                }).ConfigureAwait(false);
-                return Task.FromResult(new T());
+                SaveLog<T>(ex, "FindUpdateAsy<T>");
+                return new ValueTask<T>(new T());
             }
         }
 
@@ -474,20 +396,14 @@ namespace FastMongoDb.Core.Repository
             }
             catch (Exception ex)
             {
-                Task.Run(() =>
-                {
-                    SaveLog<T>(ex, "PgaeList<T>");
-                }).ConfigureAwait(false);
+                SaveLog<T>(ex, "PgaeList<T>");
                 return new PageResult<T>();
             }
         }
 
-        public Task<PageResult<T>> PageListAsy<T>(PageModel pModel, Expression<Func<T, bool>> predicate, Expression<Func<T, object>> field = null, Expression<Func<T, object>> sort = null, bool isDesc = false) where T : class, new()
+        public ValueTask<PageResult<T>> PageListAsy<T>(PageModel pModel, Expression<Func<T, bool>> predicate, Expression<Func<T, object>> field = null, Expression<Func<T, object>> sort = null, bool isDesc = false) where T : class, new()
         {
-            return Task.Run(() =>
-            {
-                return PageList<T>(pModel, predicate, field, sort, isDesc);
-            });
+            return new ValueTask<PageResult<T>>(PageList<T>(pModel, predicate, field, sort, isDesc));
         }
 
 
@@ -525,10 +441,7 @@ namespace FastMongoDb.Core.Repository
             }
             catch (Exception ex)
             {
-                Task.Run(() =>
-                {
-                    SaveLog<T>(ex, "UpdateDefinition<T>");
-                }).ConfigureAwait(false);
+                SaveLog<T>(ex, "UpdateDefinition<T>");
                 return null;
             }
         }
